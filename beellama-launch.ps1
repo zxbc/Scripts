@@ -45,11 +45,14 @@ $LogFile      = "I:\beellama\llama-server.log"
 $HostAddr     = "0.0.0.0"
 $Port         = 8080
 
-# KV cache preset. Confirmed in the v0.3.2 prebuilt's compiled FA matrix.
-# q5_0/q4_1 is the docs' sweet spot: 32.8% of bf16 size, 92.65% precision.
-# Override at launch:  $env:BEE_CTK = "q4_0"; $env:BEE_CTV = "q4_0"; .\beellama-launch.ps1
-$CacheTypeK   = $(if ($env:BEE_CTK) { $env:BEE_CTK } else { "q5_0" })
-$CacheTypeV   = $(if ($env:BEE_CTV) { $env:BEE_CTV } else { "q4_1" })
+# KV cache preset. KVarN (Walsh-Hadamard transform-domain compression) is
+# specifically wired for Qwen3.6 head dimensions (128/256/512). kvarn5/kvarn4
+# uses WHT + adaptive per-tile scaling to achieve ~28.3% of bf16 size with
+# precision comparable to q5_0/q4_1 (32.8%), saving ~14% VRAM on the cache.
+# Native CUDA FlashAttention consumption — no F16 materialization overhead.
+# Override at launch:  $env:BEE_CTK = "q5_0"; $env:BEE_CTV = "q4_1"; .\beellama-launch.ps1
+$CacheTypeK   = $(if ($env:BEE_CTK) { $env:BEE_CTK } else { "kvarn5" })
+$CacheTypeV   = $(if ($env:BEE_CTV) { $env:BEE_CTV } else { "kvarn4" })
 
 # Context & batch
 $ContextSize  = 131072
