@@ -33,7 +33,7 @@ Edit these at the top of the script to adjust behavior:
 | `$Port` | `8080` | Server port |
 | `$CacheTypeK` | `q5_0` | KV cache precision for K (override via `$env:BEE_CTK`) |
 | `$CacheTypeV` | `q4_1` | KV cache precision for V (override via `$env:BEE_CTV`) |
-| `$ContextSize` | `93184` | Context window in tokens |
+| `$ContextSize` | `131072` | Context window in tokens (128K) |
 | `$BatchSize` | `2048` | Logical prompt batch size |
 | `$UbatchSize` | `512` | Physical microbatch size (keeps VRAM spikes in check during prefill) |
 | `$SpecDraftNMax` | `2` | MTP speculative draft max (Qwen docs confirm 2 is ideal for quality/speed) |
@@ -61,7 +61,7 @@ $env:BEE_CTK = "q4_0"; $env:BEE_CTV = "q4_0"; .\beellama-launch.ps1
 
 | Flag | Value | Why |
 |---|---|---|
-| `-c` | `93184` | ~91k usable context after chat template overhead |
+| `-c` | `131072` | 128K context window |
 | `-b` | `2048` | Upstream default logical batch |
 | `-ub` | `512` | Microbatch: keeps VRAM spikes in check during prefill at long context |
 | `-np` | `1` | Single slot — simplest and most memory-efficient |
@@ -99,7 +99,7 @@ Together: **32.8% of bf16 size, 92.65% precision** — the docs' recommended swe
 | Flag | Value | Why |
 |---|---|---|
 | `--reasoning` | `on` | Enable thinking/reasoning output handling |
-| `--chat-template-kwargs` | `{"preserve_thinking":true}` | Preserve thinking tokens across turns so the model has full context for follow-up reasoning — critical for multi-turn agentic work |
+| `$env:LLAMA_ARG_CHAT_TEMPLATE_KWARGS` | `{"preserve_thinking":true}` | Preserve thinking tokens across turns so the model has full context for follow-up reasoning — critical for multi-turn agentic work. Set via environment variable (not a CLI flag) to avoid PowerShell JSON quoting issues. |
 
 #### Sampling
 
@@ -157,8 +157,8 @@ Press **Ctrl-C** to stop. Server output is tee'd to the console and `$LogFile`.
 | Component | Estimated VRAM |
 |---|---|
 | Q4_K_M model weights (27B) | ~15.5–16 GB |
-| KV cache (q5_0/q4_1, ~91k ctx) | ~4–5 GB |
+| KV cache (q5_0/q4_1, 128K ctx) | ~5–6 GB |
 | CUDA graph / scratch / overhead | ~1–2 GB |
-| **Total** | **~21–23 GB** |
+| **Total** | **~22–24 GB** |
 
-Fits comfortably on a 24 GB RTX 3090 with some headroom.
+Tight fit on a 24 GB RTX 3090. If you hit OOM at 128K, drop cache to `q4_0/q4_0` (31.3% of bf16) via `$env:BEE_CTK = "q4_0"; $env:BEE_CTV = "q4_0"`.
