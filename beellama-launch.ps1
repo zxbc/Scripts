@@ -52,7 +52,7 @@ $CacheTypeK   = $(if ($env:BEE_CTK) { $env:BEE_CTK } else { "q5_0" })
 $CacheTypeV   = $(if ($env:BEE_CTV) { $env:BEE_CTV } else { "q4_1" })
 
 # Context & batch
-$ContextSize  = 93184
+$ContextSize  = 131072
 $BatchSize    = 2048
 $UbatchSize   = 512
 
@@ -118,7 +118,11 @@ Write-Host ""
 Write-Host "Model name for clients: $ModelAlias"
 Write-Host ""
 
+# Pass JSON kwargs via env var to avoid PowerShell argument parsing issues
+$env:LLAMA_ARG_CHAT_TEMPLATE_KWARGS = '{"preserve_thinking":true}'
+
 # ============== ARGS ==============
+
 $argList = @(
     # Model & GPU placement
     "-m",                  $ModelPath
@@ -145,7 +149,6 @@ $argList = @(
 
     # Reasoning (agentic work)
     "--reasoning",         "on"
-    "--chat-template-kwargs", '{"preserve_thinking":true}'
 
     # Sampling (balanced for agentic use)
     "--temp",              "0.6"
