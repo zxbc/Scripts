@@ -6,9 +6,11 @@ Personal utility scripts.
 
 ## beellama-launch.ps1
 
-Launches [BeeLlama.cpp](https://github.com/ggml-org/beellama) v0.3.2 as a sidecar OpenAI-compatible server for **Unsloth Studio** and **OpenHands**.
+Launches [BeeLlama.cpp](https://github.com/Anbeeld/beellama.cpp) v0.4.0 as a sidecar OpenAI-compatible server for **Unsloth Studio** and **OpenHands**.
 
 Loads a **Qwen 3.6 27B Q4_K_M** GGUF (Claude-Opus-DeepSeek distilled with Imatrix MTP) from the local HuggingFace cache and exposes an OpenAI-compatible endpoint at `http://0.0.0.0:8080/v1`.
+
+**v0.4.0 change:** MTP speculative decoding now requires explicit `--spec-type draft-mtp` (auto-detect was removed).
 
 ### Hardware
 
@@ -17,7 +19,7 @@ Loads a **Qwen 3.6 27B Q4_K_M** GGUF (Claude-Opus-DeepSeek distilled with Imatri
 | GPU | RTX 3090 24 GB |
 | RAM | 32 GB |
 | OS | Windows 11 (PowerShell 5.1+) |
-| Build | BeeLlama v0.3.2 Preview, build 10316 (fe67745db), Clang 20.1.8, CUDA |
+| Build | BeeLlama v0.4.0 Preview, Windows x86_64, CUDA |
 
 ### Configurable Variables
 
@@ -103,9 +105,8 @@ At 128K context, kvarn5/kvarn4 saves ~0.7–0.8 GB VRAM vs q5_0/q4_1.
 
 | Flag | Value | Why |
 |---|---|---|
-| `--spec-draft-n-max` | `2` | MTP speculative decoding (heads built into the model, auto-detected from GGUF metadata). `n-max=2` is the sweet spot for this model — higher values hurt acceptance rate. ~1.8x speedup on structured code. |
-
-**Note:** MTP is auto-detected from the model metadata — no `--spec-type` flag is needed or valid.
+| `--spec-type` | `draft-mtp` | Explicit MTP type required in v0.4.0+ (auto-detect was removed) |
+| `--spec-draft-n-max` | `2` | MTP speculative draft horizon (heads built into the model). `n-max=2` is the sweet spot — higher values hurt acceptance rate. ~1.8x speedup on structured code. |
 
 #### Attention & Memory
 
